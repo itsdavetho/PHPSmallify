@@ -26,7 +26,7 @@
 
 			$encodeStrings = true;
 			$stripWhiteSpace = true;
-			$results = $iterator->smallify(true, false, true);
+			$results = $iterator->smallify();
 
 			echo '<textarea name="php">' . htmlentities($results['smallified']) . '</textarea>';
 		}
