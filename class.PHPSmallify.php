@@ -50,6 +50,7 @@ class PHPSmallify {
 	}
 
 	public function smallify($stripComments = true, $encodeStrings = false, $stripWhiteSpace = true) {
+		$this->php_code = mb_convert_encoding($this->php_code, 'UTF-8');
 		if($this->php_code == null) {
 			throw new \Exception(__METHOD__ . ': Need to load PHP code first.');
 		}
