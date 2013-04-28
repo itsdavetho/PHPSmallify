@@ -29,6 +29,7 @@
 			$results = $iterator->smallify();
 
 			echo '<textarea name="php">' . htmlentities($results['smallified']) . '</textarea>';
+			echo '<p>' . $results['space_savings'] . '% space saved. Original size: ' . $results['initial_size'] / 1024 . 'kB, new size: ' . $results['new_size'] / 1024 . 'kB</p>';
 		}
 		echo '
 		<form method="POST" action="">
