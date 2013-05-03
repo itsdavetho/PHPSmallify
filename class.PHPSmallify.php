@@ -9,6 +9,14 @@ class PHPSmallify {
     protected $php_code = null, $new_php_code = null, $php_code_size;
     protected $variables = array(), $functions = array();
     
+    /**
+     * 
+     * The constructor
+     * 
+     * @param string $file        The file to load
+     * @param string $code[=null] The PHP code to load.
+     * 
+     **/
     public function __construct($file = null, $code = null) {
         if ($file !== null && $code === null) {
             $this->loadFile($file);
@@ -17,6 +25,13 @@ class PHPSmallify {
         }
     }
     
+    /**
+     * 
+     * Load PHP code to minify.
+     * 
+     * @param string $code The PHP code to load.
+     * 
+     **/
     public function loadPHPCode($code) {
         $filename = __DIR__ . '/tmp/' . md5($code) . '.tmp.php';
         file_put_contents($filename, $code);
@@ -29,6 +44,13 @@ class PHPSmallify {
         unlink($filename);
     }
     
+    /**
+     * 
+     * Load PHP code from a file
+     * 
+     * @param string $file The path to the file
+     * 
+     **/
     public function loadFile($file) {
         if (is_file($file)) {
             if ($this->php_check_syntax($file, $errors) == false) {
@@ -42,10 +64,29 @@ class PHPSmallify {
         }
     }
     
+    /**
+     * 
+     * Is it a valid label? From http://www.php.net/manual/en/language.functions.php
+     *
+     * @param string $in The label
+     *
+     * @return boolean
+     *
+     */
     public function validPHP($in) {
         return preg_match('/[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*/', $in);
     }
     
+    /**
+     *
+     * Make it "smallified"
+     *
+     * @param boolean $stripComments   Should we remove all comments?
+     * @param boolean $stripWhiteSpace Should we remove whitespace?
+     *
+     * @return boolean 
+     *
+     */
     public function smallify($stripComments = true, $stripWhiteSpace = true) {
         if ($this->php_code == null) {
             throw new \Exception(__METHOD__ . ': Need to load PHP code first.');
@@ -131,6 +172,15 @@ class PHPSmallify {
         );
     }
     
+    /**
+     *
+     * Lint PHP code
+     *
+     * @param string  $file    File with PHP code in it.
+     * @param boolean &$errors The array to store any errors in.
+     *
+     * @return boolean
+     */
     public function php_check_syntax($file, &$errors) {
         $cmd = 'php -l ' . escapeshellarg($file) . ' 2>&1';
         $output = exec($cmd, $op, $ret_val);
