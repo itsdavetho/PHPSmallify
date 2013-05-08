@@ -1,10 +1,60 @@
 <?php
+/**
+ * PHPSmallify -- Make your PHP code "small""
+ *
+ * PHP version 5
+ *
+ * Copyright (c) 2013, Orpheus
+ * All rights reserved.
+ * Redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided
+ * that the following conditions are met:
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ * Neither the name of the <ORGANIZATION> nor the names of its contributors
+ * may be used to endorse or promote products derived from this software without
+ * specific prior written permission.
+ * 
+ * @category  Utility
+ * @package   Orpheus\PHPSmallify
+ * @author    Orpheus <lolidunno@live.co.uk>
+ * @copyright 2013-2013 Orpheus
+ * @license   http://www.php.net/license/3_01.txt  PHP License 3.01
+ * @version   GIT: $Id$
+ * @link      https://github.com/xxOrpheus/PHPSmallify
+ */
+
 namespace Orpheus;
 
-class PHPSmallify {
-    protected $reserved_variables = array('_GET', '_POST', '_COOKIE', '_SESSION', '_SERVER', 'GLOBALS', '_FILES', '_REQUEST', '_ENV', 'php_errormsg', 'HTTP_RAW_POST_DATA', 'http_response_header', 'argv', 'argc', 'this');
+/**
+ * PHPSmallify -- Make your PHP code "small""
+ * 
+ * @category  Utility
+ * @package   Orpheus\PHPSmallify
+ * @author    Orpheus <lolidunno@live.co.uk>
+ * @copyright 2013-2013 Orpheus
+ * @license   http://www.php.net/license/3_01.txt  PHP License 3.01
+ * @version   Release: 1.0.0
+ * @link      https://github.com/xxOrpheus/PHPSmallify
+ */
+class PHPSmallify
+{
+    protected $reserved_variables = array('_GET', '_POST',
+              '_COOKIE', '_SESSION',
+              '_SERVER', 'GLOBALS', '_FILES', '_REQUEST',
+              '_ENV', 'php_errormsg', 'HTTP_RAW_POST_DATA',
+              'http_response_header', 'argv', 'argc', 'this'
+        );
     
-    protected $reserved_methods = array('__construct', '__destruct', '__call', '__callStatic', '__get', '__set', '__isset', '__unset', '__sleep', '__wakeup', '__toString', '__invoke', '__set_state', '__clone');
+    protected $reserved_methods =
+        array('__construct', '__destruct', '__call',
+              '__callStatic', '__get', '__set', '__isset',
+              '__unset', '__sleep', '__wakeup', '__toString',
+              '__invoke', '__set_state', '__clone'
+        );
     
     protected $php_code = null, $new_php_code = null, $php_code_size;
     protected $variables = array(), $functions = array();
@@ -39,7 +89,9 @@ class PHPSmallify {
         if ($this->php_check_syntax($filename, $errors)) {
             $this->php_code = $code;
         } else {
-            throw new \Exception(__METHOD__ . ': The PHP contains syntax errors.');
+            throw new \Exception(
+                __METHOD__ . ': The PHP contains syntax errors.'
+            );
         }
         unlink($filename);
     }
@@ -54,13 +106,20 @@ class PHPSmallify {
     public function loadFile($file) {
         if (is_file($file)) {
             if ($this->php_check_syntax($file, $errors) == false) {
-                throw new \Exception(__METHOD__ . ': "' . $file . '" contains syntax errors: ' . $errors[0]);
+                throw new \Exception(
+                    __METHOD__ . ': "' . $file 
+                    . '" contains syntax errors: ' 
+                    . $errors[0]
+                );
             }
             
             $this->php_code = file_get_contents($file);
             $this->php_code_size = strlen($this->php_code);
         } else {
-            throw new \Exception(__METHOD__ . ': "' . $file . '" does not exist.');
+            throw new \Exception(
+                __METHOD__ . ': "' 
+                . $file . '" does not exist.'
+            );
         }
     }
     
@@ -74,7 +133,10 @@ class PHPSmallify {
      *
      */
     public function validPHP($in) {
-        return preg_match('/[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*/', $in);
+        return preg_match('
+        /[a-zA-Z_\x7f-\xff]
+        [a-zA-Z0-9_\x7f-\xff]*/
+        ', $in);
     }
     
     /**
@@ -89,7 +151,10 @@ class PHPSmallify {
      */
     public function smallify($stripComments = true, $stripWhiteSpace = true) {
         if ($this->php_code == null) {
-            throw new \Exception(__METHOD__ . ': Need to load PHP code first.');
+            throw new \Exception(
+                __METHOD__ 
+                . ': Need to load PHP code first.'
+            );
         }
         $this->php_code = mb_convert_encoding($this->php_code, 'UTF-8');
         
@@ -108,8 +173,18 @@ class PHPSmallify {
                 $this->new_php_code .= $token;
                 continue;
             }
-            if (($token[0] == T_VARIABLE || (isset($tokens[$key - 2]) && $tokens[$key - 2][0] == T_VARIABLE && $tokens[$key - 2][1] == '$this' && isset($tokens[$key - 1]) && $tokens[$key - 1][0] = T_OBJECT_OPERATOR && $tokens[$key + 1] != '(')) && !in_array(substr($token[1], 1), $this->reserved_variables)) {
-                if ((isset($tokens[$key - 2]) && $tokens[$key - 2][0] == T_VARIABLE) && (isset($tokens[$key - 1]) && $tokens[$key - 1][0] == T_OBJECT_OPERATOR)) {
+            if (($token[0] == T_VARIABLE
+                || (isset($tokens[$key - 2])
+                && $tokens[$key - 2][0] == T_VARIABLE
+                && $tokens[$key - 2][1] == '$this'
+                && isset($tokens[$key - 1])
+                && $tokens[$key - 1][0] = T_OBJECT_OPERATOR
+                && $tokens[$key + 1] != '('))
+                && !in_array(substr($token[1], 1), $this->reserved_variables)) {
+                if ((isset($tokens[$key - 2]) 
+                    && $tokens[$key - 2][0] == T_VARIABLE)
+                    && (isset($tokens[$key - 1])
+                    && $tokens[$key - 1][0] == T_OBJECT_OPERATOR)) {
                     $prefix = '';
                 } else {
                     $prefix = '$';
@@ -133,12 +208,19 @@ class PHPSmallify {
                 }
             }
             
-            if ($stripComments && $token[0] == T_COMMENT || $token[0] == T_DOC_COMMENT) {
+            if ($stripComments
+                && $token[0] == T_COMMENT
+                || $token[0] == T_DOC_COMMENT) {
                 continue;
             }
             
             if ($stripWhiteSpace && $token[0] == T_WHITESPACE) {
-                if (isset($tokens[$key - 1]) && isset($tokens[$key + 1]) && is_array($tokens[$key - 1]) && is_array($tokens[$key + 1]) && $this->validPHP($tokens[$key - 1][1]) && $this->validPHP($tokens[$key + 1][1])) {
+                if (isset($tokens[$key - 1]) 
+                    && isset($tokens[$key + 1])
+                    && is_array($tokens[$key - 1])
+                    && is_array($tokens[$key + 1])
+                    && $this->validPHP($tokens[$key - 1][1])
+                    && $this->validPHP($tokens[$key + 1][1])) {
                     $this->new_php_code .= ' ';
                 }
                 continue;
@@ -153,13 +235,16 @@ class PHPSmallify {
         $compression_ratio = strlen($this->new_php_code) / $this->php_code_size;
         $space_savings = 1 - (strlen($this->new_php_code) / $this->php_code_size);
         
-        $filename = __DIR__ . '/' . md5($this->new_php_code) . '.tmp.php';
+        $filename = __DIR__ . '/' . 
+                                    md5($this->new_php_code) . '.tmp.php';
         file_put_contents($filename, $this->new_php_code);
         chmod($filename, 0777);
         $valid = $this->php_check_syntax($filename, $errors);
         if (!$valid) {
             var_dump($errors);
-            throw new \Exception(__METHOD__ . ': The minified PHP code contains errors. Please notify the developer.');
+            throw new \Exception(__METHOD__ . 
+            ': The minified PHP code contains errors.
+               Please notify the developer.');
         }
         unlink($filename);
         
