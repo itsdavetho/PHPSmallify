@@ -134,10 +134,7 @@ class PHPSmallify
      *
      */
     public function validPHP($in) {
-        return preg_match('
-        /[a-zA-Z_\x7f-\xff]
-        [a-zA-Z0-9_\x7f-\xff]*/
-        ', $in);
+        return preg_match('/[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*/', $in);
     }
     
     /**
