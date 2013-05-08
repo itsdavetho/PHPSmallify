@@ -37,7 +37,7 @@ namespace Orpheus;
  * @author    Orpheus <lolidunno@live.co.uk>
  * @copyright 2013-2013 Orpheus
  * @license   http://www.php.net/license/3_01.txt  PHP License 3.01
- * @version   GIT: $Id$
+ * @version   Release: 1.1.0
  * @link      https://github.com/xxOrpheus/PHPSmallify
  */
 class PHPSmallify
