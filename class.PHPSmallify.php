@@ -40,6 +40,7 @@ namespace Orpheus;
  * @version   Release: 1.1.0
  * @link      https://github.com/xxOrpheus/PHPSmallify
  */
+
 class PHPSmallify
 {
     protected $reserved_variables = array('_GET', '_POST',
