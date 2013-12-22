@@ -37,7 +37,7 @@ namespace Orpheus;
  * @author    Orpheus <lolidunno@live.co.uk>
  * @copyright 2013-2013 Orpheus
  * @license   http://www.php.net/license/3_01.txt  PHP License 3.01
- * @version   Release: 1.1.0
+ * @version   Release: 1.1.5
  * @link      https://github.com/xxOrpheus/PHPSmallify
  */
 
@@ -72,31 +72,11 @@ class PHPSmallify
         if ($file !== null && $code === null) {
             $this->loadFile($file);
         } else if ($code !== null) {
-            $this->loadPHPCode($code);
-        }
-    }
-    
-    /**
-     * 
-     * Load PHP code to minify.
-     * 
-     * @param string $code The PHP code to load.
-     * 
-     **/
-    public function loadPHPCode($code) {
-        $filename = __DIR__ . '/tmp/' . md5($code) . '.tmp.php';
-        file_put_contents($filename, $code);
-        chmod($filename, 0777);
-        if ($this->php_check_syntax($filename, $errors)) {
             $this->php_code = $code;
-        } else {
-            throw new \Exception(
-                __METHOD__ . ': The PHP contains syntax errors.'
-            );
+            $this->php_code_size = strlen($this->php_code);
         }
-        unlink($filename);
     }
-    
+     
     /**
      * 
      * Load PHP code from a file
@@ -106,14 +86,6 @@ class PHPSmallify
      **/
     public function loadFile($file) {
         if (is_file($file)) {
-            if ($this->php_check_syntax($file, $errors) == false) {
-                throw new \Exception(
-                    __METHOD__ . ': "' . $file 
-                    . '" contains syntax errors: ' 
-                    . $errors[0]
-                );
-            }
-            
             $this->php_code = file_get_contents($file);
             $this->php_code_size = strlen($this->php_code);
         } else {
@@ -233,19 +205,6 @@ class PHPSmallify
         $compression_ratio = strlen($this->new_php_code) / $this->php_code_size;
         $space_savings = 1 - (strlen($this->new_php_code) / $this->php_code_size);
         
-        $filename = __DIR__ . '/' . 
-                                    md5($this->new_php_code) . '.tmp.php';
-        file_put_contents($filename, $this->new_php_code);
-        chmod($filename, 0777);
-        $valid = $this->php_check_syntax($filename, $errors);
-        if (!$valid) {
-            var_dump($errors);
-            throw new \Exception(__METHOD__ . 
-            ': The minified PHP code contains errors.
-               Please notify the developer.');
-        }
-        unlink($filename);
-        
         return array(
             'smallified' => $this->new_php_code,
             'initial_size' => $this->php_code_size,
@@ -253,32 +212,5 @@ class PHPSmallify
             'compression_ratio' => $compression_ratio,
             'space_savings' => $space_savings * 100
         );
-    }
-    
-    /**
-     *
-     * Lint PHP code
-     *
-     * @param string  $file    File with PHP code in it.
-     * @param boolean &$errors The array to store any errors in.
-     *
-     * @return boolean
-     */
-    public function php_check_syntax($file, &$errors) {
-        $cmd = 'php -l ' . escapeshellarg($file) . ' 2>&1';
-        $output = exec($cmd, $op, $ret_val);
-        if (preg_match('/no syntax errors/i', $output)) {
-            return true;
-        } else {
-            reset($op);
-            end($op);
-            $lastKey = key($op);
-            unset($op[$lastKey]);
-            reset($op);
-            
-            $errors = $op;
-            
-            return false;
-        }
     }
 }
