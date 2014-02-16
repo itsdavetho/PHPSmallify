@@ -37,7 +37,7 @@ namespace Orpheus;
  * @author    Orpheus <lolidunno@live.co.uk>
  * @copyright 2013-2013 Orpheus
  * @license   http://www.php.net/license/3_01.txt  PHP License 3.01
- * @version   Release: 1.2
+ * @version   Release: 1.1.5
  * @link      https://github.com/xxOrpheus/PHPSmallify
  */
 
@@ -131,7 +131,7 @@ class PHPSmallify {
      * @return boolean 
      *
      */
-    public function smallify($stripComments = true, $stripWhiteSpace = true, $changeVariables = true, $encodeStrings = false) {
+    public function smallify($stripComments = true, $stripWhiteSpace = true, $changeVariables = true, $encodeStrings = false, $finalObfuscate = false) {
         if ($this->php_code == null) {
             throw new \Exception(__METHOD__ . ': Need to load PHP code first.');
         }
@@ -200,7 +200,7 @@ class PHPSmallify {
                 continue;
             }
             
-            if ($stripWhiteSpace && $token[0] == T_WHITESPACE && !$ignoreBlock) {
+            if ($stripWhiteSpace && $token[0] == T_WHITESPACE) {
                 if (isset($tokens[$key - 1]) && isset($tokens[$key + 1]) && is_array($tokens[$key - 1]) && is_array($tokens[$key + 1]) && $this->validPHP($tokens[$key - 1][1]) && $this->validPHP($tokens[$key + 1][1])) {
                     $this->new_php_code .= ' ';
                 }
@@ -212,7 +212,9 @@ class PHPSmallify {
                 $i = 0;
             }
         }
-        
+        if($finalObfuscate) {
+            $this->new_php_code = $this->randomEncode($this->new_php_code);
+        }
         $compression_ratio = strlen($this->new_php_code) / $this->php_code_size;
         $space_savings = 1 - (strlen($this->new_php_code) / $this->php_code_size);
         
