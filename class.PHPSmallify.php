@@ -37,25 +37,14 @@ namespace Orpheus;
  * @author    Orpheus <lolidunno@live.co.uk>
  * @copyright 2013-2013 Orpheus
  * @license   http://www.php.net/license/3_01.txt  PHP License 3.01
- * @version   Release: 1.1.5
+ * @version   Release: 1.2
  * @link      https://github.com/xxOrpheus/PHPSmallify
  */
 
-class PHPSmallify
-{
-    protected $reserved_variables = array('_GET', '_POST',
-              '_COOKIE', '_SESSION',
-              '_SERVER', 'GLOBALS', '_FILES', '_REQUEST',
-              '_ENV', 'php_errormsg', 'HTTP_RAW_POST_DATA',
-              'http_response_header', 'argv', 'argc', 'this'
-        );
+class PHPSmallify {
+    protected $reserved_variables = array('_GET', '_POST', '_COOKIE', '_SESSION', '_SERVER', 'GLOBALS', '_FILES', '_REQUEST', '_ENV', 'php_errormsg', 'HTTP_RAW_POST_DATA', 'http_response_header', 'argv', 'argc', 'this');
     
-    protected $reserved_methods =
-        array('__construct', '__destruct', '__call',
-              '__callStatic', '__get', '__set', '__isset',
-              '__unset', '__sleep', '__wakeup', '__toString',
-              '__invoke', '__set_state', '__clone'
-        );
+    protected $reserved_methods = array('__construct', '__destruct', '__call', '__callStatic', '__get', '__set', '__isset', '__unset', '__sleep', '__wakeup', '__toString', '__invoke', '__set_state', '__clone');
     
     protected $php_code = null, $new_php_code = null, $php_code_size;
     protected $variables = array(), $functions = array();
@@ -76,7 +65,7 @@ class PHPSmallify
             $this->php_code_size = strlen($this->php_code);
         }
     }
-     
+    
     /**
      * 
      * Load PHP code from a file
@@ -89,10 +78,7 @@ class PHPSmallify
             $this->php_code = file_get_contents($file);
             $this->php_code_size = strlen($this->php_code);
         } else {
-            throw new \Exception(
-                __METHOD__ . ': "' 
-                . $file . '" does not exist.'
-            );
+            throw new \Exception(__METHOD__ . ': "' . $file . '" does not exist.');
         }
     }
     
@@ -111,6 +97,32 @@ class PHPSmallify
     
     /**
      *
+     * Random encoder - Encodes string with random functions.
+     *
+     * @return array[result, encoders_used]
+     *
+     */
+    public function randomEncode($str, $loops = 4) {
+        $newStr = $str;
+        $encoders = array('base64_encode' => 'base64_decode', 'str_rot13' => 'str_rot13');
+        $decoders = array();
+        for($i = 0; $i < $loops; $i++) {
+            $encoder = array_rand($encoders);
+            $newStr = $encoder($newStr);
+            $decoder = $encoders[$encoder];
+            $decoders[] = $decoder;
+        }
+        $decodeString = '';
+        foreach($decoders as $decoder) {
+            $decodeString .= $decoder . '(';
+        }
+        $decodeString .= '"' . $newStr . '"';
+        $decodeString .= str_repeat(')', $loops);
+        return $decodeString;
+    }
+
+    /**
+     *
      * Make it "smallified"
      *
      * @param boolean $stripComments   Should we remove all comments?
@@ -119,12 +131,9 @@ class PHPSmallify
      * @return boolean 
      *
      */
-    public function smallify($stripComments = true, $stripWhiteSpace = true) {
+    public function smallify($stripComments = true, $stripWhiteSpace = true, $changeVariables = true, $encodeStrings = false) {
         if ($this->php_code == null) {
-            throw new \Exception(
-                __METHOD__ 
-                . ': Need to load PHP code first.'
-            );
+            throw new \Exception(__METHOD__ . ': Need to load PHP code first.');
         }
         $this->php_code = mb_convert_encoding($this->php_code, 'UTF-8');
         
@@ -138,59 +147,61 @@ class PHPSmallify
         $usedFunctions = array();
         $replacedFunction = array();
         $i = 0;
+        $ignoreBlock = false;
         foreach ($tokens as $key => $token) {
             if (!is_array($token)) {
                 $this->new_php_code .= $token;
                 continue;
             }
-            if (($token[0] == T_VARIABLE
-                || (isset($tokens[$key - 2])
-                && $tokens[$key - 2][0] == T_VARIABLE
-                && $tokens[$key - 2][1] == '$this'
-                && isset($tokens[$key - 1])
-                && $tokens[$key - 1][0] = T_OBJECT_OPERATOR
-                && $tokens[$key + 1] != '('))
-                && !in_array(substr($token[1], 1), $this->reserved_variables)) {
-                if ((isset($tokens[$key - 2]) 
-                    && $tokens[$key - 2][0] == T_VARIABLE)
-                    && (isset($tokens[$key - 1])
-                    && $tokens[$key - 1][0] == T_OBJECT_OPERATOR)) {
+            if (($token[0] == T_VARIABLE || (isset($tokens[$key - 2]) && $tokens[$key - 2][0] == T_VARIABLE && $tokens[$key - 2][1] == '$this' && isset($tokens[$key - 1]) && $tokens[$key - 1][0] = T_OBJECT_OPERATOR && $tokens[$key + 1] != '(')) && !in_array(substr($token[1], 1), $this->reserved_variables)) {
+                if ((isset($tokens[$key - 2]) && $tokens[$key - 2][0] == T_VARIABLE) && (isset($tokens[$key - 1]) && $tokens[$key - 1][0] == T_OBJECT_OPERATOR)) {
                     $prefix = '';
                 } else {
                     $prefix = '$';
                 }
-                
-                if (substr($token[1], 0, 1) == '$') {
-                    $token[1] = substr($token[1], 1);
-                }
-                if (isset($replacedVariables[$token[1]])) {
-                    $token[1] = $prefix . $replacedVariables[$token[1]];
-                } else {
-                    $oldVariable = $token[1];
-                    $token[1] = $chars[$i];
-                    while (in_array($token[1], $usedVariables)) {
-                        $token[1] .= $chars[$i];
+                if ($changeVariables && !$ignoreBlock) {
+                    if (substr($token[1], 0, 1) == '$') {
+                        $token[1] = substr($token[1], 1);
                     }
-                    $usedVariables[] = $token[1];
-                    $replacedVariables[$oldVariable] = $token[1];
-                    $token[1] = $prefix . $token[1];
-                    $i++;
+                    if (isset($replacedVariables[$token[1]])) {
+                        $token[1] = $prefix . $replacedVariables[$token[1]];
+                    } else {
+                        $oldVariable = $token[1];
+                        $token[1] = $chars[$i];
+                        while (in_array($token[1], $usedVariables)) {
+                            $token[1] .= $chars[$i];
+                        }
+                        $usedVariables[] = $token[1];
+                        $replacedVariables[$oldVariable] = $token[1];
+                        $token[1] = $prefix . $token[1];
+                        $i++;
+                    }
                 }
             }
-            
-            if ($stripComments
-                && $token[0] == T_COMMENT
-                || $token[0] == T_DOC_COMMENT) {
+                
+            if ($encodeStrings && !$ignoreBlock) {
+                if($token[0] == T_CONSTANT_ENCAPSED_STRING) {
+                    $str = substr($token[1], 1);
+                    $str = substr($str, 0, -1);
+                    $str = $this->randomEncode($str);
+                    $token[1] = $str;
+                }
+            }
+            if($token[0] == T_COMMENT || $token[0] == T_DOC_COMMENT) {
+                $comment = trim($token[1]);
+                if($comment == '//smallify-ignore' || $comment == '/*smallify-ignore*/') {
+                    $ignoreBlock = true;
+                }
+                if($comment == '//smallify-ignore-end' || $comment == '/*smallify-ignore-end*/') {
+                    $ignoreBlock = false;
+                }
+            }            
+            if ($stripComments && ($token[0] == T_COMMENT || $token[0] == T_DOC_COMMENT)) {
                 continue;
             }
             
-            if ($stripWhiteSpace && $token[0] == T_WHITESPACE) {
-                if (isset($tokens[$key - 1]) 
-                    && isset($tokens[$key + 1])
-                    && is_array($tokens[$key - 1])
-                    && is_array($tokens[$key + 1])
-                    && $this->validPHP($tokens[$key - 1][1])
-                    && $this->validPHP($tokens[$key + 1][1])) {
+            if ($stripWhiteSpace && $token[0] == T_WHITESPACE && !$ignoreBlock) {
+                if (isset($tokens[$key - 1]) && isset($tokens[$key + 1]) && is_array($tokens[$key - 1]) && is_array($tokens[$key + 1]) && $this->validPHP($tokens[$key - 1][1]) && $this->validPHP($tokens[$key + 1][1])) {
                     $this->new_php_code .= ' ';
                 }
                 continue;
