@@ -37,7 +37,7 @@ namespace Orpheus;
  * @author    Orpheus <lolidunno@live.co.uk>
  * @copyright 2013-2013 Orpheus
  * @license   http://www.php.net/license/3_01.txt  PHP License 3.01
- * @version   Release: 1.3
+ * @version   Release: 1.1.5
  * @link      https://github.com/xxOrpheus/PHPSmallify
  */
 
@@ -192,7 +192,7 @@ class PHPSmallify {
             }
 
             if($token[0] == T_OPEN_TAG) {
-                $token[1] = trim($token[1]);
+                $token[1] = trim($token[1]) . ' ';
             }
 
             if($changeFunctions && !$ignoreBlock && $token[0] == T_FUNCTION) {
