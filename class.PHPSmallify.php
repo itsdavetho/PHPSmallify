@@ -60,7 +60,7 @@ class PHPSmallify {
     public function __construct($file = null, $code = null) {
         if ($file !== null && $code === null) {
             $this->loadFile($file);
-        } else if ($code !== null) {
+        } else if ($code !== null && $file === null) {
             $this->php_code = $code;
             $this->php_code_size = strlen($this->php_code);
         }
