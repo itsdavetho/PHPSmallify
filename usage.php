@@ -1,38 +1,27 @@
+<?php
+if(isset($_POST['php'])) {
+	header('Content-type: text/plain');
+	$obfuscateVariables = isset($_POST['obfuscateVariables']) ? true : false;
+	$obfuscateFunctions = isset($_POST['obfuscateFunctions']) ? true : false;
+	$obfuscateStrings = isset($_POST['obfuscateStrings']) ? true : false;
+	require 'class.PHPSmallify.php';
+	$phpSmallify = new Orpheus\PHPSmallify(null, $_POST['php']);
+	$results = $phpSmallify->smallify(true, true, $obfuscateVariables, $obfuscateFunctions, $obfuscateStrings, false);
+	die($results['smallified']);
+}
+?>
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Minify your PHP</title>
-		<style type="text/css">
-			body {
-				font-family: arial;
-				background-color: #EEE;
-			}
-
-			textarea[name="php"] {
-				width: 100%;
-				height: 250px;
-			}
-		</style>
+		<title>PHP Smallifier / Obfuscator</title>
 	</head>
-
-	<body>
-		<?php
-		if(isset($_POST['php'])) {
-			require 'class.PHPSmallify.php';
-			$filename = __DIR__ . '/tmp/' . md5($_POST['php'] . time()) . '.tmp.php';
-			file_put_contents($filename, $_POST['php']);
-			chmod($filename, 0777);
-			$phpSmallify = new Orpheus\PHPSmallify($filename);
-			$results = $phpSmallify->smallify();
-
-			echo '<textarea name="php">' . htmlentities($results['smallified']) . '</textarea>';
-			echo '<p>' . $results['space_savings'] . '% space saved. Original size: ' . $results['initial_size'] / 1024 . 'kB, new size: ' . $results['new_size'] / 1024 . 'kB</p>';
-		}
-		echo '
-		<form method="POST" action="">
-			<textarea name="php"></textarea>
-			<p><input type="submit" value="Minify" /></p>
-		</form>';
-		?>
+	<body>	
+		<form method="POST" action="smallify.php">
+			<textarea name="php" style="width: 100%; height: 480px;"></textarea>
+			<p><input type="checkbox" name="obfuscateVariables" /> Obfuscate variables</p>
+			<p><input type="checkbox" name="obfuscateFunctions" /> Obfuscate function names</p>
+			<p><input type="checkbox" name="obfuscateStrings" /> Obfuscate strings</p>
+			<input type="submit" name="submit" value="Go" />
+		</form>
 	</body>
 </html>
