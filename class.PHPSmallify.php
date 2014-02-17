@@ -188,6 +188,10 @@ class PHPSmallify {
                 }
             }
 
+            if($token[0] == T_OPEN_TAG) {
+                $token[1] = trim($token[1]);
+            }
+
             if($changeFunctions && !$ignoreBlock && $token[0] == T_FUNCTION) {
                 $name = $key + 2;
                 if(isset($tokens[$name], $tokens[$name][0], $tokens[$name][1]) && $tokens[$name][0] == T_STRING) {
