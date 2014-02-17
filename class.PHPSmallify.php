@@ -37,7 +37,7 @@ namespace Orpheus;
  * @author    Orpheus <lolidunno@live.co.uk>
  * @copyright 2013-2013 Orpheus
  * @license   http://www.php.net/license/3_01.txt  PHP License 3.01
- * @version   Release: 1.1.5
+ * @version   Release: 1.3
  * @link      https://github.com/xxOrpheus/PHPSmallify
  */
 
@@ -130,12 +130,15 @@ class PHPSmallify {
      * @param boolean $changeVariables This will obfuscate variable names.
      * @param boolean $changeFunctions This will obfuscate function names.
      * @param boolean $encodeStrings This selects random encoders and obfuscates your strings with them.
+     * @param boolean $encodeNumbers Encodes numbers to their hex equivalents.
      * @param boolean $finalObfuscate This selects random encoders and obfuscates your code with them.
      *
      * @return boolean 
      *
      */
-    public function smallify($stripComments = true, $stripWhiteSpace = true, $changeVariables = true, $changeFunctions = false, $encodeStrings = false, $encodeNumbers = false, $finalObfuscate = false) {
+    public function smallify($stripComments = true, $stripWhiteSpace = true, $changeVariables = true,
+                            $changeFunctions = false, $encodeStrings = false,
+                            $encodeNumbers = false, $finalObfuscate = false) {
         if ($this->php_code == null) {
             throw new \Exception(__METHOD__ . ': Need to load PHP code first.');
         }
@@ -248,7 +251,7 @@ class PHPSmallify {
         if($finalObfuscate) {
             $this->new_php_code = $this->randomEncode($this->new_php_code);
         }
-        $compression_ratio = strlen($this->new_php_code) / $this->php_code_size;
+        $compression_ratio = $this->php_code_size / strlen($this->new_php_code);
         $space_savings = 1 - (strlen($this->new_php_code) / $this->php_code_size);
         
         return array(
