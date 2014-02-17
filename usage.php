@@ -16,7 +16,7 @@ if(isset($_POST['php'])) {
 		<title>PHP Smallifier / Obfuscator</title>
 	</head>
 	<body>	
-		<form method="POST" action="smallify.php">
+		<form method="POST" action="">
 			<textarea name="php" style="width: 100%; height: 480px;"></textarea>
 			<p><input type="checkbox" name="obfuscateVariables" /> Obfuscate variables</p>
 			<p><input type="checkbox" name="obfuscateFunctions" /> Obfuscate function names</p>
