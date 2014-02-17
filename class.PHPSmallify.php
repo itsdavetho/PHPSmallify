@@ -149,7 +149,6 @@ class PHPSmallify {
         $countChars = count($chars);
         $usedVariables = array();
         $replacedVariables = array();
-        $usedFunctions = array();
         $replacedFunctions = array();
         $ignoreBlock = false;
         foreach ($tokens as $key => $token) {
@@ -194,7 +193,7 @@ class PHPSmallify {
                 if(isset($tokens[$name], $tokens[$name][0], $tokens[$name][1]) && $tokens[$name][0] == T_STRING) {
                     $functionName = $tokens[$name][1];
                     $char = $chars[array_rand($chars)];
-                    while(in_array($char, $usedFunctions)) {
+                    while(in_array($char, $replacedFunctions)) {
                         $char .= $chars[array_rand($chars)];
                     }
                     $replacedFunctions[$functionName] = $char;
