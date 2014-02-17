@@ -135,7 +135,7 @@ class PHPSmallify {
      * @return boolean 
      *
      */
-    public function smallify($stripComments = true, $stripWhiteSpace = true, $changeVariables = true, $changeFunctions = false, $encodeStrings = false, $finalObfuscate = false) {
+    public function smallify($stripComments = true, $stripWhiteSpace = true, $changeVariables = true, $changeFunctions = false, $encodeStrings = false, $encodeNumbers = false, $finalObfuscate = false) {
         if ($this->php_code == null) {
             throw new \Exception(__METHOD__ . ': Need to load PHP code first.');
         }
@@ -208,6 +208,13 @@ class PHPSmallify {
                     $token[1] = $str;
                 }
             }
+
+            if($encodeNumbers && !$ignoreBlock) {
+                if($token[0] == T_LNUMBER) {
+                    $number = (int) $token[1];
+                    $token[1] = '0x' . dechex($number);
+                }
+            }
             if($token[0] == T_COMMENT || $token[0] == T_DOC_COMMENT) {
                 $comment = trim($token[1]);
                 if($comment == '//smallify-ignore' || $comment == '/*smallify-ignore*/') {
@@ -232,7 +239,7 @@ class PHPSmallify {
             $this->new_php_code .= $token[1];
         }
         foreach($replacedFunctions as $function => $new) {
-            $this->new_php_code = preg_replace('/' . $function . '/u', $new, $this->new_php_code);
+            $this->new_php_code = preg_replace('/' . $function . '([\s\n\t]+)?\(/u', $new . '(', $this->new_php_code);
         }
         if($finalObfuscate) {
             $this->new_php_code = $this->randomEncode($this->new_php_code);
