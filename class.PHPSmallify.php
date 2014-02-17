@@ -37,7 +37,7 @@ namespace Orpheus;
  * @author    Orpheus <lolidunno@live.co.uk>
  * @copyright 2013-2013 Orpheus
  * @license   http://www.php.net/license/3_01.txt  PHP License 3.01
- * @version   Release: 1.2
+ * @version   Release: 1.1.5
  * @link      https://github.com/xxOrpheus/PHPSmallify
  */
 
@@ -127,11 +127,15 @@ class PHPSmallify {
      *
      * @param boolean $stripComments   Should we remove all comments?
      * @param boolean $stripWhiteSpace Should we remove whitespace?
+     * @param boolean $changeVariables This will obfuscate variable names.
+     * @param boolean $changeFunctions This will obfuscate function names.
+     * @param boolean $encodeStrings This selects random encoders and obfuscates your strings with them.
+     * @param boolean $finalObfuscate This selects random encoders and obfuscates your code with them.
      *
      * @return boolean 
      *
      */
-    public function smallify($stripComments = true, $stripWhiteSpace = true, $changeVariables = true, $encodeStrings = false, $finalObfuscate = false) {
+    public function smallify($stripComments = true, $stripWhiteSpace = true, $changeVariables = true, $changeFunctions = false, $encodeStrings = false, $finalObfuscate = false) {
         if ($this->php_code == null) {
             throw new \Exception(__METHOD__ . ': Need to load PHP code first.');
         }
@@ -141,20 +145,26 @@ class PHPSmallify {
         $this->new_php_code = null;
         
         $chars = range('a', 'z');
+        shuffle($chars);
         $countChars = count($chars);
         $usedVariables = array();
         $replacedVariables = array();
         $usedFunctions = array();
-        $replacedFunction = array();
-        $i = 0;
+        $replacedFunctions = array();
         $ignoreBlock = false;
         foreach ($tokens as $key => $token) {
             if (!is_array($token)) {
                 $this->new_php_code .= $token;
                 continue;
             }
-            if (($token[0] == T_VARIABLE || (isset($tokens[$key - 2]) && $tokens[$key - 2][0] == T_VARIABLE && $tokens[$key - 2][1] == '$this' && isset($tokens[$key - 1]) && $tokens[$key - 1][0] = T_OBJECT_OPERATOR && $tokens[$key + 1] != '(')) && !in_array(substr($token[1], 1), $this->reserved_variables)) {
-                if ((isset($tokens[$key - 2]) && $tokens[$key - 2][0] == T_VARIABLE) && (isset($tokens[$key - 1]) && $tokens[$key - 1][0] == T_OBJECT_OPERATOR)) {
+            if (($token[0] == T_VARIABLE
+                 || (isset($tokens[$key - 2]) && $tokens[$key - 2][0] == T_VARIABLE
+                 && $tokens[$key - 2][1] == '$this' && isset($tokens[$key - 1])
+                 && $tokens[$key - 1][0] = T_OBJECT_OPERATOR && $tokens[$key + 1] != '('))
+                 && !in_array(substr($token[1], 1), $this->reserved_variables)) {
+                if ((isset($tokens[$key - 2])
+                    && $tokens[$key - 2][0] == T_VARIABLE) && (isset($tokens[$key - 1])
+                    && $tokens[$key - 1][0] == T_OBJECT_OPERATOR)) {
                     $prefix = '';
                 } else {
                     $prefix = '$';
@@ -167,18 +177,30 @@ class PHPSmallify {
                         $token[1] = $prefix . $replacedVariables[$token[1]];
                     } else {
                         $oldVariable = $token[1];
+                        $i = array_rand($chars);
                         $token[1] = $chars[$i];
                         while (in_array($token[1], $usedVariables)) {
-                            $token[1] .= $chars[$i];
+                            $token[1] .= $chars[array_rand($chars)];
                         }
                         $usedVariables[] = $token[1];
                         $replacedVariables[$oldVariable] = $token[1];
                         $token[1] = $prefix . $token[1];
-                        $i++;
                     }
                 }
             }
-                
+
+            if($changeFunctions && !$ignoreBlock && $token[0] == T_FUNCTION) {
+                $name = $key + 2;
+                if(isset($tokens[$name], $tokens[$name][0], $tokens[$name][1]) && $tokens[$name][0] == T_STRING) {
+                    $functionName = $tokens[$name][1];
+                    $char = $chars[array_rand($chars)];
+                    while(in_array($char, $usedFunctions)) {
+                        $char .= $chars[array_rand($chars)];
+                    }
+                    $replacedFunctions[$functionName] = $char;
+                }
+            }
+
             if ($encodeStrings && !$ignoreBlock) {
                 if($token[0] == T_CONSTANT_ENCAPSED_STRING) {
                     $str = substr($token[1], 1);
@@ -201,16 +223,17 @@ class PHPSmallify {
             }
             
             if ($stripWhiteSpace && $token[0] == T_WHITESPACE) {
-                if (isset($tokens[$key - 1]) && isset($tokens[$key + 1]) && is_array($tokens[$key - 1]) && is_array($tokens[$key + 1]) && $this->validPHP($tokens[$key - 1][1]) && $this->validPHP($tokens[$key + 1][1])) {
+                if (isset($tokens[$key - 1]) && isset($tokens[$key + 1])
+                    && is_array($tokens[$key - 1]) && is_array($tokens[$key + 1])
+                    && $this->validPHP($tokens[$key - 1][1]) && $this->validPHP($tokens[$key + 1][1])) {
                     $this->new_php_code .= ' ';
                 }
                 continue;
             }
-            
             $this->new_php_code .= $token[1];
-            if ($i >= $countChars - 1) {
-                $i = 0;
-            }
+        }
+        foreach($replacedFunctions as $function => $new) {
+            $this->new_php_code = preg_replace('/' . $function . '/u', $new, $this->new_php_code);
         }
         if($finalObfuscate) {
             $this->new_php_code = $this->randomEncode($this->new_php_code);
